@@ -1,3 +1,6 @@
+require("dotenv").config();
+const path = require("path");
+const fs = require("fs/promises");
 const { body, validationResult } = require("express-validator");
 
 exports.bodyRequired = (field, fieldName) =>
@@ -13,6 +16,26 @@ exports.catchValidationErrors = (req, res, next) => {
       errors: errors.array(),
     });
   }
-  
+
   return next();
+};
+
+exports.moveUpload = async (fileName, subfolder, id) => {
+  const filePath = path.join(process.cwd(), process.env.UPLOAD_FOLDER, fileName);
+  const newDirectory = path.join(process.cwd(), process.env.UPLOAD_FOLDER, subfolder, id);
+  
+  let dirExists;
+  try {
+    await fs.access(newDirectory);
+    dirExists = true;
+  } catch (error) {
+    dirExists= false;
+  }
+
+  if (!dirExists) {
+    await fs.mkdir(newDirectory, { recursive: true });
+  }
+
+  const newFilePath = path.join(newDirectory, fileName);
+  await fs.rename(filePath, newFilePath);
 };

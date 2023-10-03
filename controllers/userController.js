@@ -1,8 +1,9 @@
 const bcrypt = require("bcryptjs");
 const asyncHandler = require("express-async-handler");
 const { param, validationResult, body } = require("express-validator");
-const { bodyRequired, catchValidationErrors } = require("./controllerHelper");
+const { bodyRequired, catchValidationErrors, moveUpload } = require("./controllerHelper");
 const User = require("../models/User");
+const upload = require("../middleware/upload");
 
 const addParamUserToReq = [
   param("userid").isMongoId().withMessage("User ID is not valid"),
@@ -28,6 +29,7 @@ exports.getUsers = asyncHandler(async (req, res) => {
 });
 
 exports.postUsers = [
+  upload.single("avatar"),
   bodyRequired("name", "Username"),
   bodyRequired("email", "E-mail")
     .isEmail()
@@ -51,6 +53,12 @@ exports.postUsers = [
 
     await user.save();
 
+    if (req.file) {
+      await moveUpload(req.file.filename, "users", user._id.toString());
+      user.avatar = req.file.filename;
+      await user.save();
+    }
+
     user.password = undefined;
 
     return res.status(201).json(user);
@@ -67,6 +75,7 @@ exports.getUser = [
 
 exports.putUser = [
   addParamUserToReq,
+  upload.single("avatar"),
   body("name").trim().escape(),
   body("email").trim().escape().isEmail().withMessage("E-Mail has invalid format").optional({ values: "null" }),
   body("password").trim().escape(),
@@ -83,22 +92,21 @@ exports.putUser = [
         throw new Error("Old password is incorrect");
       }
     }),
-  body("avatarurl")
-    .trim()
-    .isURL({ require_host: false })
-    .withMessage("Avatar URL has invalid format")
-    .optional({ values: "null" }),
   catchValidationErrors,
   asyncHandler(async (req, res, next) => {
     const user = req.queriedUser;
 
     if (req.body.name) user.name = req.body.name;
     if (req.body.email) user.email = req.body.email;
-    if (req.body.avatarurl) user.avatarUrl = req.body.avatarurl;
 
     if (req.body.password) {
       const hashedPassword = await bcrypt.hash(req.body.password, 10);
       user.password = hashedPassword;
+    }
+
+    if (req.file) {
+      await moveUpload(req.file.filename, "users", user._id.toString());
+      user.avatar = req.file.filename;
     }
 
     await user.save();
