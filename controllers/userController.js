@@ -51,14 +51,13 @@ exports.postUsers = [
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
     user.password = hashedPassword;
 
-    await user.save();
-
     if (req.file) {
       await moveUpload(req.file.filename, "users", user._id.toString());
       user.avatar = req.file.filename;
-      await user.save();
     }
 
+    await user.save();
+    
     user.password = undefined;
 
     return res.status(201).json(user);
