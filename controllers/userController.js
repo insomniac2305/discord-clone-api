@@ -1,7 +1,7 @@
 const bcrypt = require("bcryptjs");
 const asyncHandler = require("express-async-handler");
-const { param, validationResult, body } = require("express-validator");
-const { bodyRequired, catchValidationErrors, moveUpload } = require("./controllerHelper");
+const { param, body } = require("express-validator");
+const { bodyRequired, catchValidationErrors, moveUpload, deleteUploadDir } = require("./controllerHelper");
 const User = require("../models/User");
 const upload = require("../middleware/upload");
 
@@ -57,7 +57,7 @@ exports.postUsers = [
     }
 
     await user.save();
-    
+
     user.password = undefined;
 
     return res.status(201).json(user);
@@ -121,6 +121,7 @@ exports.deleteUser = [
   asyncHandler(async (req, res, next) => {
     const user = req.queriedUser;
     await user.deleteOne();
+    await deleteUploadDir("users", user._id.toString());
     return res.status(204).send();
   }),
 ];
