@@ -23,13 +23,13 @@ exports.catchValidationErrors = (req, res, next) => {
 exports.moveUpload = async (fileName, subfolder, id) => {
   const filePath = path.join(process.cwd(), process.env.UPLOAD_FOLDER, fileName);
   const newDirectory = path.join(process.cwd(), process.env.UPLOAD_FOLDER, subfolder, id);
-  
+
   let dirExists;
   try {
     await fs.access(newDirectory);
     dirExists = true;
   } catch (error) {
-    dirExists= false;
+    dirExists = false;
   }
 
   if (!dirExists) {
@@ -38,4 +38,9 @@ exports.moveUpload = async (fileName, subfolder, id) => {
 
   const newFilePath = path.join(newDirectory, fileName);
   await fs.rename(filePath, newFilePath);
+};
+
+exports.deleteUploadDir = async (subfolder, id) => {
+  const dir = path.join(process.cwd(), process.env.UPLOAD_FOLDER, subfolder, id);
+  await fs.rm(dir, { recursive: true, force: true });
 };

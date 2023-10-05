@@ -14,7 +14,7 @@ const memberSchema = new Schema({
 
 const serverSchema = new Schema({
   name: { type: String, required: true },
-  iconUrl: { type: String },
+  icon: { type: String },
   channels: [{ type: Schema.Types.ObjectId, ref: "Channel" }],
   members: [memberSchema],
 });

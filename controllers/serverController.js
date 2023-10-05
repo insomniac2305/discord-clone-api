@@ -1,9 +1,10 @@
 const asyncHandler = require("express-async-handler");
 const { param, body } = require("express-validator");
-const { bodyRequired, catchValidationErrors } = require("./controllerHelper");
+const { bodyRequired, catchValidationErrors, moveUpload, deleteUploadDir } = require("./controllerHelper");
 const mongoose = require("mongoose");
 const Server = require("../models/Server");
 const Channel = require("../models/Channel");
+const upload = require("../middleware/upload");
 
 const addParamServerToReq = [
   param("serverid").isMongoId().withMessage("Server ID is not valid"),
@@ -50,12 +51,8 @@ exports.getServers = asyncHandler(async (req, res) => {
 });
 
 exports.postServers = [
+  upload.single("icon"),
   bodyRequired("name", "Server name"),
-  body("iconurl", "Icon URL")
-    .trim()
-    .isURL({ require_host: false })
-    .withMessage("Icon URL has invalid format")
-    .optional({ values: "null" }),
   catchValidationErrors,
   asyncHandler(async (req, res, next) => {
     const session = await mongoose.startSession();
@@ -87,6 +84,11 @@ exports.postServers = [
         },
       ];
 
+      if (req.file) {
+        await moveUpload(req.file.filename, "servers", server._id.toString());
+        server.icon = req.file.filename;
+      }
+
       await server.save({ session });
 
       await session.commitTransaction();
@@ -113,17 +115,17 @@ exports.getServer = [
 exports.putServer = [
   addParamServerToReq,
   checkServerPermissions(Server.Roles.Admin),
+  upload.single("icon"),
   body("name").trim().escape(),
-  body("iconurl")
-    .trim()
-    .isURL({ require_host: false })
-    .withMessage("Icon URL has invalid format")
-    .optional({ values: "null" }),
   asyncHandler(async (req, res) => {
     const server = req.queriedServer;
 
     if (req.body.name) server.name = req.body.name;
-    if (req.body.iconurl) server.iconUrl = req.body.iconurl;
+
+    if (req.file) {
+      await moveUpload(req.file.filename, "servers", server._id.toString());
+      server.icon = req.file.filename;
+    }
 
     await server.save();
 
@@ -149,12 +151,13 @@ exports.deleteServer = [
       await session.commitTransaction();
       session.endSession();
 
-      return res.status(204).send();
     } catch (error) {
       await session.abortTransaction();
       session.endSession();
-
+      
       return next(error);
     }
+    await deleteUploadDir("servers", server._id.toString());
+    return res.status(204).send();
   }),
 ];
