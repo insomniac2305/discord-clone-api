@@ -27,6 +27,13 @@ app.use(cors());
 app.use("/api", apiRouter);
 app.use("/", indexRouter);
 
+app.use((req, res, next) => {
+  const responseJson = {
+    message: "Resource not found",
+  };
+  res.status(404).json(responseJson);
+});
+
 app.use((err, req, res, next) => {
   const responseJson = {
     message: err.message,
