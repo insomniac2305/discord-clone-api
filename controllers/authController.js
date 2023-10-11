@@ -15,12 +15,12 @@ exports.postLogin = asyncHandler(async (req, res, next) => {
 
   const user = await User.findOne({ email: email });
   if (!user) {
-    res.status(401).json({ message: "Provided credentials are invalid" });
+    return res.status(401).json({ message: "Provided credentials are invalid" });
   }
 
   const passwordMatches = await bcrypt.compare(password, user.password);
   if (!passwordMatches) {
-    res.status(401).json({ message: "Provided credentials are invalid" });
+    return res.status(401).json({ message: "Provided credentials are invalid" });
   }
 
   const options = {
