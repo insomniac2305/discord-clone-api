@@ -28,9 +28,11 @@ exports.postLogin = asyncHandler(async (req, res, next) => {
   };
   const secret = process.env.JWT_SECRET;
   const token = jwt.sign({ sub: user._id }, secret, options);
+  user.password = undefined;
 
   return res.status(200).json({
     message: "Authentification successful",
     token,
+    user
   });
 });
