@@ -7,6 +7,8 @@ router.get("/", checkAuth(), userController.getUsers);
 
 router.post("/", userController.postUsers);
 
+router.get("/me", checkAuth(), userController.getCurrentUser);
+
 router.get("/:userid", checkAuth(), userController.getUser);
 
 router.put("/:userid", checkAuth(), userController.putUser);

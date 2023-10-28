@@ -64,12 +64,22 @@ exports.postUsers = [
   }),
 ];
 
-exports.getUser = [
+const getUser = [
   addParamUserToReq,
   asyncHandler(async (req, res) => {
     req.queriedUser.password = undefined;
     return res.json(req.queriedUser);
   }),
+];
+
+exports.getUser = getUser;
+
+exports.getCurrentUser = [
+  (req, res, next) => {
+    req.params.userid = req.user._id;
+    next();
+  },
+  getUser,
 ];
 
 exports.putUser = [
