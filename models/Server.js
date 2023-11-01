@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+require("dotenv").config();
 
 const Schema = mongoose.Schema;
 
@@ -14,7 +15,16 @@ const memberSchema = new Schema({
 
 const serverSchema = new Schema({
   name: { type: String, required: true },
-  icon: { type: String },
+  icon: {
+    type: String,
+    get: function (icon) {
+      if (icon) {
+        return `${process.env.BASE_URL}/files/servers/${this._id}/${icon}`;
+      } else {
+        return undefined;
+      }
+    },
+  },
   channels: [{ type: Schema.Types.ObjectId, ref: "Channel" }],
   members: [memberSchema],
 });
