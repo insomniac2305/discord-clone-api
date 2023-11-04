@@ -13,21 +13,24 @@ const memberSchema = new Schema({
   role: { type: String, required: true, enum: Object.values(Roles), default: Roles.Member },
 });
 
-const serverSchema = new Schema({
-  name: { type: String, required: true },
-  icon: {
-    type: String,
-    get: function (icon) {
-      if (icon) {
-        return `${process.env.BASE_URL}/files/servers/${this._id}/${icon}`;
-      } else {
-        return undefined;
-      }
+const serverSchema = new Schema(
+  {
+    name: { type: String, required: true },
+    icon: {
+      type: String,
+      get: function (icon) {
+        if (icon) {
+          return `${process.env.BASE_URL}/files/servers/${this._id}/${icon}`;
+        } else {
+          return undefined;
+        }
+      },
     },
+    channels: [{ type: Schema.Types.ObjectId, ref: "Channel" }],
+    members: [memberSchema],
   },
-  channels: [{ type: Schema.Types.ObjectId, ref: "Channel" }],
-  members: [memberSchema],
-});
+  { toJSON: { getters: true } }
+);
 
 module.exports = mongoose.model("Server", serverSchema);
 module.exports.Roles = Roles;
