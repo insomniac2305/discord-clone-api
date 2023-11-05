@@ -33,6 +33,7 @@ exports.getServerChannels = [
   asyncHandler(async (req, res) => {
     const server = req.queriedServer;
     await server.populate("channels", "-messages");
+    server.channels.sort((a, b) => (a.type < b.type ? -1 : 1));
     return res.json(server.channels);
   }),
 ];
