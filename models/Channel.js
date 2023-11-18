@@ -7,18 +7,10 @@ const Types = {
   Voice: "voice",
 };
 
-const messageSchema = new Schema(
-  {
-    text: { type: String, required: true },
-    user: { type: Schema.Types.ObjectId, ref: "User" },
-  },
-  { timestamps: true }
-);
-
 const channelSchema = new Schema({
   name: { type: String, required: true },
   type: { type: String, required: true, enum: Object.values(Types), default: Types.Text },
-  messages: [messageSchema],
+  messages: [{ type: Schema.Types.ObjectId, ref: "Message" }],
 });
 
 module.exports = mongoose.model("Channel", channelSchema);
